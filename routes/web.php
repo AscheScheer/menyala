@@ -66,5 +66,7 @@ Route::get('/classrooms/{id}/edit', [ClassroomController::class, 'edit'])->name(
 Route::get('/classrooms/create', [ClassroomController::class, 'create'])->name('classrooms.create'); // Form tambah data
 Route::post('/classrooms', [ClassroomController::class, 'store'])->name('classrooms.store'); // Simpan data
 
+Route::get('/classrooms/export/xml', [ClassroomController::class, 'exportXml'])->name('classrooms.export.xml');
+
 
 require __DIR__ . '/auth.php';

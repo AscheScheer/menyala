@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg container">
         <div class="relative p-3">
             {{ $users->links() }}
             <a href="{{ route('users.create') }}"
@@ -7,7 +7,7 @@
                 <button class="btn btn-primary">Tambah Data</button>
             </a>
         </div>
-        <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+        <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400 container">
             <thead class="text-sm text-gray-700 uppercase bg-white dark:bg-gray-800 ">
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">

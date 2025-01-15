@@ -5,15 +5,34 @@ namespace App\Http\Controllers;
 use App\Models\Classroom;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
 
 class ClassroomController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Ambil semua data classrooms beserta nama guru
-        $classrooms = Classroom::with('teacher')->paginate(20);
+        // Mulai query untuk classrooms dengan relasi ke tabel teachers
+        $query = Classroom::with('teacher');
+
+        // Filter berdasarkan tanggal jika parameter diberikan
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('updated_at', [
+                $request->start_date,
+                $request->end_date,
+            ]);
+        } elseif ($request->has('start_date')) {
+            $query->whereDate('updated_at', '>=', $request->start_date);
+        } elseif ($request->has('end_date')) {
+            $query->whereDate('updated_at', '<=', $request->end_date);
+        }
+
+        // Pagination dengan 20 data per halaman
+        $classrooms = $query->paginate(20);
+
+        // Kirim data ke view
         return view('classrooms.index', compact('classrooms'));
     }
+
 
     public function create()
     {
@@ -78,5 +97,47 @@ class ClassroomController extends Controller
 
         // Redirect dengan pesan sukses
         return redirect()->route('classroom')->with('success', 'Data classroom berhasil diupdate.');
+    }
+
+
+    public function exportXml(Request $request)
+    {
+        // Mulai query untuk classrooms
+        $query = Classroom::with('teacher');
+
+        // Filter berdasarkan tanggal jika parameter diberikan
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('updated_at', [
+                $request->start_date,
+                $request->end_date,
+            ]);
+        } elseif ($request->has('start_date')) {
+            $query->whereDate('updated_at', '>=', $request->start_date);
+        } elseif ($request->has('end_date')) {
+            $query->whereDate('updated_at', '<=', $request->end_date);
+        }
+
+        // Ambil data classrooms
+        $classrooms = $query->get();
+
+        // Buat struktur XML
+        $xml = new \SimpleXMLElement('<classrooms/>');
+
+        foreach ($classrooms as $classroom) {
+            $classroomNode = $xml->addChild('classroom');
+            $classroomNode->addChild('id', $classroom->id);
+            $classroomNode->addChild('class_name', $classroom->class_name);
+            $classroomNode->addChild('teacher', $classroom->teacher->name ?? 'Unknown');
+            $classroomNode->addChild('updated_at', $classroom->updated_at);
+        }
+
+        // Konversi XML ke string
+        $xmlString = $xml->asXML();
+
+        // Kirim response XML
+        return Response::make($xmlString, 200, [
+            'Content-Type' => 'application/xml',
+            'Content-Disposition' => 'attachment; filename="classrooms.xml"',
+        ]);
     }
 }
